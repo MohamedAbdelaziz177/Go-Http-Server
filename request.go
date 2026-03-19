@@ -3,34 +3,35 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"net"
 	"strconv"
 	"strings"
 )
 
 type Request struct {
-	Proto    string
-	Method   string
-	Endpoint string
-	Headers  map[string]string
-	Params   map[string]string
-	Body     []byte
+	Proto   string
+	Method  string
+	Path    string
+	Headers map[string]string
+	Params  map[string]string
+	Body    []byte
 }
 
-func NewRequest(proto string, method string, endpoint string, headers map[string]string, params map[string]string, body []byte) *Request {
+func NewRequest(proto string, method string, path string, headers map[string]string, params map[string]string, body []byte) *Request {
 	return &Request{
-		Proto:    proto,
-		Method:   method,
-		Endpoint: endpoint,
-		Headers:  headers,
-		Params:   params,
-		Body:     body,
+		Proto:   proto,
+		Method:  method,
+		Path:    path,
+		Headers: headers,
+		Params:  params,
+		Body:    body,
 	}
 }
 
 func ParseRequest(conn net.Conn) (*Request, error) {
 
-	reader := bufio.NewReader(conn)
+	var reader *bufio.Reader = bufio.NewReader(conn)
 
 	line, err := reader.ReadString('\n')
 
@@ -45,17 +46,71 @@ func ParseRequest(conn net.Conn) (*Request, error) {
 		return nil, fmt.Errorf("invalid request line: %s", line)
 	}
 
-	method := parts[0]
+	method := strings.ToUpper(parts[0])
 	endpoint := parts[1]
-	proto := parts[2]
+	proto := strings.ToUpper(parts[2])
 
-	query := strings.Split(endpoint, "?")[1]
+	path, params := parsePathAndQueryParamsFrom(endpoint)
+	headers, err := parseHeaders(reader)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if cl, ok := headers["content-length"]; ok {
+
+		length, err := strconv.Atoi(cl)
+
+		if err != nil {
+			return nil, fmt.Errorf("invalid content-length: %s", cl)
+		}
+
+		body, err := parseBody(reader, length)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return NewRequest(proto, method, path, headers, params, body), nil
+	}
+
+	return NewRequest(proto, method, path, headers, params, nil), nil
+}
+
+func parsePathAndQueryParamsFrom(url string) (string, map[string]string) {
+
+	var path, query string
+
+	if epParts := strings.Split(url, "?"); len(epParts) == 2 {
+		path = epParts[0]
+		query = epParts[1]
+	} else {
+		path = url
+	}
 
 	params := make(map[string]string)
-	if len(query) == 1 {
+
+	if query != "" {
 
 		queryParamsAsString := strings.Split(query, "&")
+
+		for _, qp := range queryParamsAsString {
+
+			keyValuePair := strings.SplitN(qp, "=", 2)
+
+			if len(keyValuePair) == 2 {
+				params[strings.TrimSpace(keyValuePair[0])] = strings.TrimSpace(keyValuePair[1])
+
+			} else if len(keyValuePair) == 1 {
+				params[strings.TrimSpace(keyValuePair[0])] = ""
+			}
+		}
 	}
+
+	return path, params
+}
+
+func parseHeaders(reader *bufio.Reader) (map[string]string, error) {
 
 	headers := make(map[string]string)
 
@@ -79,26 +134,20 @@ func ParseRequest(conn net.Conn) (*Request, error) {
 			return nil, fmt.Errorf("invalid header: %s", line)
 		}
 
-		headers[strings.TrimSpace(parts[0])] = strings.TrimSpace(parts[1])
+		headers[strings.ToLower(strings.TrimSpace(parts[0]))] = strings.TrimSpace(parts[1])
 	}
 
-	if cl, ok := headers["content-legnth"]; ok {
+	return headers, nil
+}
 
-		legnth, err := strconv.Atoi(cl)
+func parseBody(reader *bufio.Reader, length int) ([]byte, error) {
 
-		if err != nil {
-			return nil, fmt.Errorf("invalid content-length: %s", cl)
-		}
+	body := make([]byte, length)
+	_, err := io.ReadFull(reader, body)
 
-		body := make([]byte, legnth)
-		_, err = reader.Read(body)
-
-		if err != nil {
-			return nil, fmt.Errorf("invalid body: %s", err)
-		}
-
-		return NewRequest(proto, method, endpoint, headers, params, body), nil
+	if err != nil {
+		return nil, fmt.Errorf("invalid body: %s", err)
 	}
 
-	return NewRequest(proto, method, endpoint, headers, params, nil), nil
+	return body, nil
 }

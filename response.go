@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 )
@@ -48,20 +47,5 @@ func (r *Response) Send(conn net.Conn) error {
 		return err
 	}
 
-	return nil
-}
-
-func (r *Response) jsonify(data []byte) error {
-	jsonBody, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-	r.Body = jsonBody
-	
-	if r.Headers == nil {
-		r.Headers = make(map[string]string)
-	}
-	r.Headers["Content-Type"] = "application/json"
-	
 	return nil
 }
