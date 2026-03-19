@@ -7,6 +7,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"encoding/json"
 )
 
 type Request struct {
@@ -150,4 +151,12 @@ func parseBody(reader *bufio.Reader, length int) ([]byte, error) {
 	}
 
 	return body, nil
+}
+
+// Json parses the JSON body into the provided struct
+func (req *Request) Json(data interface{}) error {
+	if len(req.Body) == 0 {
+		return fmt.Errorf("body is empty")
+	}
+	return json.Unmarshal(req.Body, data)
 }

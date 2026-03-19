@@ -5,43 +5,54 @@ import "fmt"
 func main() {
 	server := NewServer(":5555")
 
-	server.router.Get("/hello", func(req *Request, res *Response) {
+	server.router.Post("/createUser", func(req *Request, res *Response) {
+		var requestObject RequestObject
 
-		if name, ok := req.Params["name"]; ok {
-			res.Body = []byte("Hello " + name)
-		} else {
-			res.Body = []byte("Hello World")
+		err := req.Json(&requestObject)
+		if err != nil {
+			res.StatusCode = 400
+			res.Body = []byte("Invalid JSON")
+			return
 		}
-
-		res.StatusCode = 200
-		res.Headers = map[string]string{
-			"Content-Type": "text/plain",
-		}
-	})
-
-	server.router.Post("/helloTxt", func(req *Request, res *Response) {
 
 		fmt.Printf("Request: %s %s\n", req.Method, req.Path)
 		fmt.Printf("Body: %s\n", req.Body)
 
-		res.Body = []byte("Hello World")
+		res.Json(ReponseObject{
+			UserId: 1,
+			Name:   requestObject.Name,
+			Email:  requestObject.Email,
+		})
 		res.StatusCode = 200
-		res.Headers = map[string]string{
-			"Content-Type": "text/plain",
-		}
 	})
 
-	server.router.Post("/helloJson", func(req *Request, res *Response) {
+	server.router.Get("/getUser", func(req *Request, res *Response) {
 
 		fmt.Printf("Request: %s %s\n", req.Method, req.Path)
 		fmt.Printf("Body: %s\n", req.Body)
 
-		res.Body = []byte("{\"message\": \"Hello World\"}")
-		res.StatusCode = 200
-		res.Headers = map[string]string{
-			"Content-Type": "application/json",
+		responseObject := ReponseObject{
+			UserId: 1,
+			Name:   "John Doe",
+			Email:  "[EMAIL_ADDRESS]",
 		}
+
+		res.Json(responseObject)
+		res.StatusCode = 200
+
 	})
 
 	server.ListenAndStart()
+}
+
+type ReponseObject struct {
+	UserId int    `json:"user_id"`
+	Name   string `json:"name"`
+	Email  string `json:"email"`
+}
+
+type RequestObject struct {
+	Name  string `json:"name"`
+	Age   int    `json:"age"`
+	Email string `json:"email"`
 }

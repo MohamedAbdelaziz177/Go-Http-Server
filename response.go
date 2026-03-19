@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 )
@@ -26,6 +27,17 @@ func NewResponse(statusCode int, headers map[string]string, body []byte) *Respon
 		Headers:    headers,
 		Body:       body,
 	}
+}
+
+func (r *Response) Json(data interface{}) error {
+	jsonBody, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	r.Body = jsonBody
+	r.Headers["Content-Type"] = "application/json"
+	return nil
 }
 
 func (r *Response) Send(conn net.Conn) error {
