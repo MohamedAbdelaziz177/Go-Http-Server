@@ -19,7 +19,7 @@ func main() {
 		}
 	})
 
-	server.router.Post("/hello", func(req *Request, res *Response) {
+	server.router.Post("/helloTxt", func(req *Request, res *Response) {
 
 		fmt.Printf("Request: %s %s\n", req.Method, req.Path)
 		fmt.Printf("Body: %s\n", req.Body)
@@ -28,6 +28,18 @@ func main() {
 		res.StatusCode = 200
 		res.Headers = map[string]string{
 			"Content-Type": "text/plain",
+		}
+	})
+
+	server.router.Post("/helloJson", func(req *Request, res *Response) {
+
+		fmt.Printf("Request: %s %s\n", req.Method, req.Path)
+		fmt.Printf("Body: %s\n", req.Body)
+
+		res.Body = []byte("{\"message\": \"Hello World\"}")
+		res.StatusCode = 200
+		res.Headers = map[string]string{
+			"Content-Type": "application/json",
 		}
 	})
 
