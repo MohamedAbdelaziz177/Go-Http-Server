@@ -53,7 +53,10 @@ func (s *Server) handleConnection(conn net.Conn) error {
 
 	response := NewResponse(200, make(map[string]string), nil)
 
-	s.router.ServeRequest(request, response)
+	err = s.router.ServeRequest(request, response)
+	if err != nil {
+		return fmt.Errorf("Error Serving The Request: %s", err)
+	}
 
 	return response.Send(conn)
 }
