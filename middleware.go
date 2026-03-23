@@ -4,10 +4,10 @@ import "fmt"
 
 type Middlware struct {
 	handler Handler
-	next    Handler
+	next    *Middlware
 }
 
-func NewMiddlware(handler Handler, next Handler) *Middlware {
+func NewMiddlware(handler Handler, next *Middlware) *Middlware {
 	return &Middlware{
 		handler: handler,
 		next:    next,
@@ -18,7 +18,7 @@ func (m *Middlware) setHandler(handler Handler) {
 	m.handler = handler
 }
 
-func (m *Middlware) setNext(next Handler) {
+func (m *Middlware) setNext(next *Middlware) {
 	m.next = next
 }
 
@@ -29,26 +29,26 @@ func (m *Middlware) execute(req *Request, res *Response) {
 
 func (m *Middlware) callNext(req *Request, res *Response) {
 	if m.next != nil {
-		m.next(req, res)
+		m.next.execute(req, res)
 	}
 }
 
-func registerMiddlewares(middlewares []Handler) (*Middlware, error) {
+func registerMiddlewares(handlers []Handler) (*Middlware, error) {
 
-	if len(middlewares) == 0 {
+	if len(handlers) == 0 {
 		return nil, fmt.Errorf("No middlewares provided")
 	}
 
-	if len(middlewares) == 1 {
-		return NewMiddlware(middlewares[0], nil), nil
+	if len(handlers) == 1 {
+		return NewMiddlware(handlers[0], nil), nil
 	}
 
-	var firstMW *Middlware = NewMiddlware(middlewares[0], nil)
+	var firstMW *Middlware = NewMiddlware(handlers[0], nil)
 	var currentMW *Middlware = firstMW
 
-	for _, middleware := range middlewares[1:] {
-		currentMW.setNext(middleware)
-		currentMW = NewMiddlware(currentMW.next, nil)
+	for _, handler := range handlers[1:] {
+		currentMW.next = NewMiddlware(handler, nil)
+		currentMW = currentMW.next
 	}
 
 	return firstMW, nil

@@ -26,15 +26,12 @@ func main() {
 		res.StatusCode = 200
 	})
 
-	server.router.Get("/getUser", func(req *Request, res *Response) {
-
-		fmt.Printf("Request: %s %s\n", req.Method, req.Path)
-		fmt.Printf("Body: %s\n", req.Body)
+	server.router.Get("/getUser", logRequest, func(req *Request, res *Response) {
 
 		responseObject := ReponseObject{
 			UserId: 1,
 			Name:   "John Doe",
-			Email:  "mohamecabdelaziz66@gmail.com",
+			Email:  ":(((((((((((((@gmail.com",
 		}
 
 		res.Json(responseObject)
@@ -42,8 +39,7 @@ func main() {
 
 	})
 
-	server.router.Get("/sayHello", mw1, mw2, func(req *Request, res *Response) {
-		fmt.Println("Handler")
+	server.router.Get("/sayHello", logRequest, func(req *Request, res *Response) {
 		res.Json(ReponseObject{
 			UserId: 1,
 			Name:   "John Doe",
@@ -55,8 +51,11 @@ func main() {
 	server.ListenAndStart()
 }
 
-func mw1(req *Request, res *Response) {
-	fmt.Println("Middleware 1")
+/*  Helper utilities to test  */
+
+func logRequest(req *Request, res *Response) {
+	fmt.Printf("Request: %s %s\n", req.Method, req.Path)
+	fmt.Printf("Body: %s\n", req.Body)
 }
 
 func mw2(req *Request, res *Response) {
