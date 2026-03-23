@@ -34,7 +34,7 @@ func main() {
 		responseObject := ReponseObject{
 			UserId: 1,
 			Name:   "John Doe",
-			Email:  "[EMAIL_ADDRESS]",
+			Email:  "mohamecabdelaziz66@gmail.com",
 		}
 
 		res.Json(responseObject)
@@ -42,7 +42,25 @@ func main() {
 
 	})
 
+	server.router.Get("/sayHello", mw1, mw2, func(req *Request, res *Response) {
+		fmt.Println("Handler")
+		res.Json(ReponseObject{
+			UserId: 1,
+			Name:   "John Doe",
+			Email:  "mohamecabdelaziz66@gmail.com",
+		})
+		res.StatusCode = 200
+	})
+
 	server.ListenAndStart()
+}
+
+func mw1(req *Request, res *Response) {
+	fmt.Println("Middleware 1")
+}
+
+func mw2(req *Request, res *Response) {
+	fmt.Println("Middleware 2")
 }
 
 type ReponseObject struct {
