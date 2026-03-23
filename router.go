@@ -36,12 +36,11 @@ func (r *Router) ServeRequest(req *Request, res *Response) error {
 
 	if handlers, ok := r.routes[key]; ok {
 
-		middleware, err := registerMiddlewares(handlers)
-		if err != nil {
-			return err
+		for _, handler := range handlers {
+			if !handler(req, res) {
+				break
+			}
 		}
-
-		middleware.execute(req, res)
 
 	} else {
 		NotFoundHandler(req, res)

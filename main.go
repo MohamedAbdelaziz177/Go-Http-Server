@@ -91,6 +91,7 @@ func validateRequest(req *Request, res *Response) bool {
 	if requestObject.Age < 18 {
 		res.StatusCode = 400
 		res.StatusText = statusText[400]
+		res.StatusText = statusText[400]
 		res.Body = []byte("Invalid Age")
 		return false
 	}
