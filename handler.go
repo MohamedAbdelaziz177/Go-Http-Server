@@ -1,6 +1,6 @@
 package main
 
-type Handler func(req *Request, res *Response)
+type Handler func(req *Request, res *Response) bool
 
 func HomeHandler(req *Request, res *Response) {
 	res.Body = []byte("Hello World")

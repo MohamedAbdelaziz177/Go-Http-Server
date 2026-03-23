@@ -23,8 +23,10 @@ func (m *Middlware) setNext(next *Middlware) {
 }
 
 func (m *Middlware) execute(req *Request, res *Response) {
-	m.handler(req, res)
-	m.callNext(req, res)
+	if m.handler(req, res) {
+		m.callNext(req, res)
+	}
+
 }
 
 func (m *Middlware) callNext(req *Request, res *Response) {

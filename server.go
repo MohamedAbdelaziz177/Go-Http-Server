@@ -49,8 +49,6 @@ func (s *Server) handleConnection(conn net.Conn) error {
 		return fmt.Errorf("Error Parsing The Request: %s", err)
 	}
 
-	fmt.Printf("Request: %s %s\n", request.Method, request.Path)
-
 	response := NewResponse(200, make(map[string]string), nil)
 
 	err = s.router.ServeRequest(request, response)
